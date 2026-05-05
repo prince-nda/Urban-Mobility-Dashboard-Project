@@ -1,0 +1,3 @@
+Initial Records: 7667792
+Cleaned Records: 7562281
+Removed: 105511

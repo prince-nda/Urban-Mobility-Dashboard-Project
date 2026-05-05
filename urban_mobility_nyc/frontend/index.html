@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NYC Mobility Explorer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div>
+      <div class="logo-text">NYC MOBILITY</div>
+      <div class="logo-sub">Urban Data Explorer</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="search-wrap">
+      <span class="search-icon">&#8981;</span>
+      <input class="search-input" type="text" placeholder="Search zones..." id="searchInput" autocomplete="off"/>
+      <div class="search-results" id="searchResults"></div>
+    </div>
+    <div class="status-dot">
+      <div class="dot" id="statusDot"></div>
+      <span id="statusText">Connecting...</span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- KPI CARDS -->
+  <div class="section-header">
+    <div class="section-title">DASHBOARD</div>
+    <div class="section-label">Live Summary</div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">Total Trips</div>
+      <div class="kpi-value" id="totalTrips">--</div>
+      <div class="kpi-unit">completed rides</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Avg Fare</div>
+      <div class="kpi-value" id="avgFare">--</div>
+      <div class="kpi-unit">per trip</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Avg Distance</div>
+      <div class="kpi-value" id="avgDistance">--</div>
+      <div class="kpi-unit">per trip</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Active Zones</div>
+      <div class="kpi-value" id="activeZones">--</div>
+      <div class="kpi-unit">pickup zones</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Peak Hour</div>
+      <div class="kpi-value" id="peakHour">--</div>
+      <div class="kpi-unit">busiest departure</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Total Revenue</div>
+      <div class="kpi-value" id="totalRevenue">--</div>
+      <div class="kpi-unit">all trips</div>
+    </div>
+  </div>
+
+  <!-- MAP -->
+  <div class="section-header">
+    <div class="section-title">NYC TAXI ZONES</div>
+    <div class="section-label">Interactive Map</div>
+  </div>
+
+  <div class="chart-card no-padding" style="margin-bottom:32px">
+    <div class="map-wrapper">
+      <div id="map"></div>
+      <div class="top-zones-overlay">
+        <span class="overlay-title">Top 5 Pickup Zones</span>
+        <div id="topZonesList" class="zones-container"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RANDOM INSIGHT -->
+  <div class="insight-banner" id="insightBanner" onclick="loadInsight()">
+    <div>
+      <div class="insight-label">Random Insight</div>
+      <div class="insight-title" id="insightTitle">Loading insight...</div>
+      <div class="insight-body" id="insightBody">Click to refresh</div>
+    </div>
+    <div class="insight-refresh">
+      <div class="refresh-icon">&#8635;</div>
+      <div>Refresh</div>
+    </div>
+  </div>
+
+  <!-- HOURLY TRENDS -->
+  <div class="section-header">
+    <div class="section-title">HOURLY TRENDS</div>
+    <div class="section-label">24H Pattern</div>
+  </div>
+
+  <div class="chart-grid">
+    <div class="chart-card">
+      <div class="chart-card-header">
+        <div class="chart-title">HOURLY TRIPS</div>
+        <div class="chart-badge">24H PATTERN</div>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="hourlyChart"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-header">
+        <div class="chart-title">AVG SPEED BY HOUR</div>
+        <div class="chart-badge">MPH</div>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="speedChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOROUGH BREAKDOWN -->
+  <div class="section-header">
+    <div class="section-title">BOROUGH BREAKDOWN</div>
+    <div class="section-label">Performance</div>
+  </div>
+
+  <div class="chart-grid">
+    <div class="chart-card">
+      <div class="chart-card-header">
+        <div class="chart-title">TRIP DISTRIBUTION</div>
+        <div class="chart-badge">BY BOROUGH</div>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="boroughChart"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-header">
+        <div class="chart-title">PERFORMANCE TABLE</div>
+        <div class="chart-badge">RANKED</div>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="borough-table">
+          <thead>
+            <tr>
+              <th>Borough</th>
+              <th>Trips</th>
+              <th>Avg Fare</th>
+              <th>Avg Speed</th>
+              <th>Volume</th>
+            </tr>
+          </thead>
+          <tbody id="boroughTableBody">
+            <tr><td colspan="5" style="color:#5a6480;text-align:center;padding:20px">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOP ROUTES -->
+  <div class="section-header">
+    <div class="section-title">TOP ROUTES</div>
+    <div class="section-label">Most Popular</div>
+  </div>
+
+  <div class="routes-grid" id="routesGrid" style="margin-bottom:32px"></div>
+
+  <!-- FARE TREND -->
+  <div class="section-header">
+    <div class="section-title">FARE TREND</div>
+    <div class="section-label">By Hour</div>
+  </div>
+
+  <div class="chart-card" style="margin-bottom:32px">
+    <div class="chart-card-header">
+      <div class="chart-title">AVERAGE FARE BY HOUR</div>
+      <div class="chart-badge">FARE TREND</div>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="fareChart"></canvas>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  NYC MOBILITY EXPLORER &mdash; <span style="color:#f7c948">@TriTech Minds</span>
+</footer>
+
+<script src="js/script.js"></script>
+</body>
+</html>

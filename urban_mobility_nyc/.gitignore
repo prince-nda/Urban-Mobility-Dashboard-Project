@@ -1,0 +1,15 @@
+# ignore these files 
+final_cleaned_data.csv
+processed_mobility_data.csv
+taxi_zone_lookup.csv
+taxi_zones.dbf
+taxi_zones.prj
+taxi_zones.sbn
+taxi_zones.sbx
+taxi_zones.shp
+taxi_zones.shp.xml
+taxi_zones.shx
+yellow_tripdata.csv
+
+# json settings
+.vscode
